@@ -1,37 +1,25 @@
-import os
 import joblib
-import numpy as np
+import os
 
-# -----------------------------
-# BASE PATH
-# -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-weights = []
-intercepts = []
+best_acc = 0
+best_model = None
 
-# -----------------------------
-# LOAD LOCAL MODELS
-# -----------------------------
 for i in range(1, 4):
     model_path = os.path.join(BASE_DIR, f"model_{i}.pkl")
+    acc_path = os.path.join(BASE_DIR, f"acc_{i}.txt")
 
     model = joblib.load(model_path)
 
-    weights.append(model.coef_)
-    intercepts.append(model.intercept_)
+    with open(acc_path, "r") as f:
+        acc = float(f.read())
 
-    print(f"✅ Loaded model_{i}.pkl")
+    if acc > best_acc:
+        best_acc = acc
+        best_model = model
 
-# -----------------------------
-# FEDERATED AVERAGING
-# -----------------------------
-global_weights = np.mean(weights, axis=0)
-global_intercept = np.mean(intercepts, axis=0)
+global_path = os.path.join(BASE_DIR, "global_model.pkl")
+joblib.dump(best_model, global_path)
 
-# -----------------------------
-# DISPLAY GLOBAL MODEL
-# -----------------------------
-print("\n🌐 Global Model Parameters:")
-print("Weights :", global_weights)
-print("Intercept:", global_intercept)
+print(f"✅ Best model selected with accuracy {best_acc}")

@@ -16,3 +16,8 @@ backend/data/dataset1/
 
 # Trained models
 *.pkl
+
+# Federated generated files
+backend/federated/client_*.csv
+backend/federated/test_data.csv
+backend/federated/acc_*.txt
