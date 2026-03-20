@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 import joblib
-import numpy as np
 import os
 import pandas as pd
-from xgboost import data
 from services.sms_service import send_sms
 
 app = FastAPI()
@@ -26,23 +24,50 @@ def home():
 # -----------------------------
 # PREDICTION ROUTE
 # -----------------------------
-@app.get("/predict")
-def predict(attendance: float, marks: float, phone: str):
-    import pandas as pd
+@app.post("/predict")
+def predict(request: dict):
+    try:
+        attendance = request["attendance"]
+        marks = request["marks"]
+        phone = request["phone"]
 
-    data = pd.DataFrame([[attendance, marks]], columns=["attendance", "marks"])
-    prediction = model.predict(data)[0]
+        # thresholds (same as preprocessing)
+        ATTENDANCE_THRESHOLD = 50
+        MARKS_THRESHOLD = 40
 
-    response = {
-        "attendance": attendance,
-        "marks": marks,
-        "risk": int(prediction)
-    }
+        # ML prediction (optional but kept)
+        df = pd.DataFrame([[attendance, marks]], columns=["attendance", "marks"])
+        prediction = model.predict(df)[0]
 
-    # send SMS if at risk
-    if prediction == 1:
-        message = f"Alert: Student is at risk! Attendance: {attendance}, Marks: {marks}"
-        send_sms(phone, message)
-        response["alert"] = "SMS Sent"
+        response = {
+            "attendance": attendance,
+            "marks": marks,
+            "risk": int(prediction)
+        }
 
-    return response
+        # -----------------------------
+        # RULE-BASED ALERT SYSTEM
+        # -----------------------------
+        message = None
+
+        if attendance < ATTENDANCE_THRESHOLD and marks < MARKS_THRESHOLD:
+            message = f"⚠️ Student at HIGH RISK!\nLow Attendance ({attendance}) and Low Marks ({marks})"
+
+        elif attendance < ATTENDANCE_THRESHOLD:
+            message = f"⚠️ Low Attendance Alert!\nAttendance: {attendance}"
+
+        elif marks < MARKS_THRESHOLD:
+            message = f"⚠️ Low Marks Alert!\nMarks: {marks}"
+
+        # send SMS only if any issue
+        if message:
+            send_sms(phone, message)
+            response["alert"] = "SMS Sent"
+            response["message"] = message
+        else:
+            response["message"] = "Student is Safe"
+
+        return response
+
+    except Exception as e:
+        return {"error": str(e)}
