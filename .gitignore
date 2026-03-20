@@ -1,4 +1,18 @@
+# Virtual Environment
 venv/
+
+# Python cache files
 __pycache__/
 *.pyc
+
+# Environment variables
 .env
+
+# Generated data
+backend/data/cleaned_data.csv
+
+# Raw dataset (do not upload)
+backend/data/dataset1/
+
+# Trained models
+*.pkl
