@@ -10,8 +10,18 @@ client = Client(
 )
 
 def send_sms(to_number, message):
-    return client.messages.create(
-        body=message,
-        from_=os.getenv("TWILIO_PHONE"),
-        to=to_number
-    )
+    try:
+        print(f"📩 Sending SMS to {to_number}")
+
+        msg = client.messages.create(
+            body=message,
+            from_=os.getenv("TWILIO_PHONE"),
+            to=to_number
+        )
+
+        print("✅ SMS Sent:", msg.sid)
+        return msg.sid
+
+    except Exception as e:
+        print("❌ SMS Failed:", e)
+        return None
