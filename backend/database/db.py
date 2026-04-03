@@ -8,10 +8,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # MySQL Connection Details - Priority to .env, otherwise defaults
+DB_NAME = os.getenv("DB_NAME", "student_alert")
+DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASS = os.getenv("DB_PASS", "")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "student_alert")
+
+# Create Database if not exists
+try:
+    import pymysql
+    connection = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASS)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
+        connection.commit()
+    finally:
+        connection.close()
+except Exception as e:
+    print(f"Warning: Could not ensure database existence: {e}")
 
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 
